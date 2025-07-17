@@ -1,29 +1,29 @@
 name: Create Release and Build Assets
 
-# 触发条件：当一个以 'v' 开头的标签 (tag) 被推送到仓库时
-# 例如：v1.0, v1.0.1, v2.0-alpha
 on:
   push:
     tags:
       - 'v*'
 
+# <-- KEY FIX: 在这里添加权限配置块
+# 为整个工作流的所有任务授予写入内容的权限。
+# 这是创建 Release 和上传 Release Assets 所必需的。
+permissions:
+  contents: write
+
 jobs:
-  # 任务一：创建 Release
-  # 这个任务会先运行，创建一个空的 Release 条目，并获得一个上传 URL
   create_release:
     runs-on: ubuntu-latest
     outputs:
-      # 将上传 URL 作为输出，供后续任务使用
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
-          # GITHUB_TOKEN 是由 GitHub 自动提供的密钥，用于授权
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }} # 使用触发工作流的 tag 作为版本号
+          tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           body: |
             这是由 GitHub Actions 自动发布的版本。
@@ -31,10 +31,8 @@ jobs:
           draft: false
           prerelease: false
 
-  # 任务二：构建并上传产物
-  # 这个任务依赖于 create_release 任务的成功
   build_and_upload:
-    needs: create_release # 声明依赖关系
+    needs: create_release
     strategy:
       matrix:
         architecture: [ 'x86_64', 'aarch64' ]
@@ -62,23 +60,19 @@ jobs:
 
     - name: Build executable with PyInstaller
       run: |
-         python -m PyInstaller --target-arch ${{ matrix.architecture }} \
-           --name soap-cli-${{ matrix.architecture }} \
-           --onefile \
-           --hidden-import=lxml._elementpath \
-           --hidden-import=pkg_resources.py2_warn \
-           cli_caller.py
+        python -m PyInstaller --target-arch ${{ matrix.architecture }} \
+          --name soap-cli-${{ matrix.architecture }} \
+          --onefile \
+          --hidden-import=lxml._elementpath \
+          --hidden-import=pkg_resources.py2_warn \
+          cli_caller.py
 
-    # 关键修改：不再是 upload-artifact，而是上传到 Release
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        # 使用 create_release 任务输出的 URL
         upload_url: ${{ needs.create_release.outputs.upload_url }}
-        # 要上传的文件的路径
         asset_path: ./dist/soap-cli-${{ matrix.architecture }}
-        # 在 Release 页面上显示的文件名
         asset_name: soap-cli-${{ matrix.architecture }}
         asset_content_type: application/octet-stream
