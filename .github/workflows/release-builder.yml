@@ -1,15 +1,40 @@
-name: Build Cross-Platform CLI
+name: Create Release and Build Assets
 
-# 触发条件：
-# 当代码被推送到 main 或 master 分支时，都会触发
-# 并且允许在 Actions 页面手动触发
+# 触发条件：当一个以 'v' 开头的标签 (tag) 被推送到仓库时
+# 例如：v1.0, v1.0.1, v2.0-alpha
 on:
   push:
-    branches: [ "main", "master" ] # <--- 修改点 1: 同时支持 main 和 master 分支
-  workflow_dispatch:
+    tags:
+      - 'v*'
 
 jobs:
-  build-and-release:
+  # 任务一：创建 Release
+  # 这个任务会先运行，创建一个空的 Release 条目，并获得一个上传 URL
+  create_release:
+    runs-on: ubuntu-latest
+    outputs:
+      # 将上传 URL 作为输出，供后续任务使用
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          # GITHUB_TOKEN 是由 GitHub 自动提供的密钥，用于授权
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }} # 使用触发工作流的 tag 作为版本号
+          release_name: Release ${{ github.ref }}
+          body: |
+            这是由 GitHub Actions 自动发布的版本。
+            可执行文件在下方的 Assets 中。
+          draft: false
+          prerelease: false
+
+  # 任务二：构建并上传产物
+  # 这个任务依赖于 create_release 任务的成功
+  build_and_upload:
+    needs: create_release # 声明依赖关系
     strategy:
       matrix:
         architecture: [ 'x86_64', 'aarch64' ]
@@ -19,7 +44,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # QEMU 是一个模拟器，它允许我们在 x86 的 runner 上完成 ARM 架构的构建
     - name: Set up QEMU for ARM build
       if: matrix.architecture == 'aarch64'
       uses: docker/setup-qemu-action@v3
@@ -36,26 +60,25 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # 这里的打包命令也进行了优化，确保能够正确地跨平台构建
     - name: Build executable with PyInstaller
       run: |
-        # <--- 修改点 2: 优化了构建命令，更加健壮
-        # 我们不再需要 if/else 判断，PyInstaller 的 --target-arch 在新版中可以直接工作
-        # 为简单起见，我们统一使用 cross-platform build 命令
          python -m PyInstaller --target-arch ${{ matrix.architecture }} \
-           --name soap-cli \
+           --name soap-cli-${{ matrix.architecture }} \
            --onefile \
            --hidden-import=lxml._elementpath \
            --hidden-import=pkg_resources.py2_warn \
            cli_caller.py
 
-    - name: Prepare artifact for upload
-      run: |
-        mv dist/soap-cli dist/soap-cli-${{ matrix.architecture }}
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
+    # 关键修改：不再是 upload-artifact，而是上传到 Release
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: soap-cli-${{ matrix.architecture }}
-        path: dist/soap-cli-${{ matrix.architecture }}
-
+        # 使用 create_release 任务输出的 URL
+        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        # 要上传的文件的路径
+        asset_path: ./dist/soap-cli-${{ matrix.architecture }}
+        # 在 Release 页面上显示的文件名
+        asset_name: soap-cli-${{ matrix.architecture }}
+        asset_content_type: application/octet-stream
