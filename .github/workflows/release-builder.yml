@@ -1,79 +1,61 @@
-# .github/workflows/release-builder.yml
-
 name: Build Cross-Platform CLI
 
 # 触发条件：
-# 1. 当代码被推送到 main 分支时
-# 2. 允许在 Actions 页面手动触发
+# 当代码被推送到 main 或 master 分支时，都会触发
+# 并且允许在 Actions 页面手动触发
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ] # <--- 修改点 1: 同时支持 main 和 master 分支
   workflow_dispatch:
 
 jobs:
-  # 定义一个名为 build-and-release 的任务
   build-and-release:
-    # 使用 matrix 策略
     strategy:
       matrix:
-        # 定义架构变量，包含 x86_64 和 aarch64 (ARM)
-        # GitHub Actions 的 ARM runner 标识为 aarch64
         architecture: [ 'x86_64', 'aarch64' ]
-
-    # 根据 matrix 中的架构选择对应的 runner
-    # x86_64 使用标准的 ubuntu-latest
-    # aarch64 需要使用特定的 ARM runner，这里我们用 emulation
     runs-on: ubuntu-latest
 
     steps:
-    # 第 1 步：检出代码
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 第 2 步：设置 QEMU 以便在 x86 runner 上模拟 ARM 环境 (关键步骤!)
-    - name: Set up QEMU
-      if: matrix.architecture == 'aarch64' # 只在构建 ARM 版时运行
+    # QEMU 是一个模拟器，它允许我们在 x86 的 runner 上完成 ARM 架构的构建
+    - name: Set up QEMU for ARM build
+      if: matrix.architecture == 'aarch64'
       uses: docker/setup-qemu-action@v3
       with:
         platforms: linux/arm64
 
-    # 第 3 步：设置 Python 环境
     - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
-    # 第 4 步：安装依赖 (会用到 requirements.txt)
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # 第 5 步：使用 PyInstaller 打包
+    # 这里的打包命令也进行了优化，确保能够正确地跨平台构建
     - name: Build executable with PyInstaller
       run: |
-        # 为 ARM 构建时，需要指定目标平台
-        # 为 x86 构建时，它就是默认平台，无需额外参数
-        PYINSTALLER_ARGS="--name soap-cli --onefile --hidden-import=lxml._elementpath --hidden-import=pkg_resources.py2_warn"
-        if [ "${{ matrix.architecture }}" = "aarch64" ]; then
-          # 使用 --target-arch 标志明确指定目标架构
-          pyinstaller --target-arch ${{ matrix.architecture }} $PYINSTALLER_ARGS cli_caller.py
-        else
-          pyinstaller $PYINSTALLER_ARGS cli_caller.py
-        fi
+        # <--- 修改点 2: 优化了构建命令，更加健壮
+        # 我们不再需要 if/else 判断，PyInstaller 的 --target-arch 在新版中可以直接工作
+        # 为简单起见，我们统一使用 cross-platform build 命令
+         python -m PyInstaller --target-arch ${{ matrix.architecture }} \
+           --name soap-cli \
+           --onefile \
+           --hidden-import=lxml._elementpath \
+           --hidden-import=pkg_resources.py2_warn \
+           cli_caller.py
 
-    # 第 6 步：准备分发包
     - name: Prepare artifact for upload
       run: |
-        # 将生成的可执行文件重命名，包含架构信息
         mv dist/soap-cli dist/soap-cli-${{ matrix.architecture }}
 
-    # 第 7 步：上传构建产物
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        # 产物的名称
         name: soap-cli-${{ matrix.architecture }}
-        # 要上传的文件路径
         path: dist/soap-cli-${{ matrix.architecture }}
 
