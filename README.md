@@ -1,5 +1,7 @@
 # SOAP Client Tool
 
+[中文版说明](README.zh-CN.md)
+
 This repository contains a SOAP client tool with the following key components:
 1. `cli_caller.py`: The main CLI interface for interacting with SOAP services.
 2. `soap_utility.py`: Core SOAP functionality using the `zeep` library.
