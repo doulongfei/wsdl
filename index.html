@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SOAP Client Tool</title>
+    <meta name="description" content="一个用于与 SOAP Web 服务交互的命令行工具，使用 Python 和 Zeep 构建。">
+    <link rel="canonical" href="https://doulongfei.github.io/wsdl/">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -60,43 +62,42 @@
 <body>
     <div class="container">
         <h1>SOAP Client Tool</h1>
-        <p style="text-align: center;">[<a href="README.zh-CN.md">中文版说明</a>]</p>
+        <p style="text-align: center;">了解更多关于此工具的信息：[<a href="README.zh-CN.md">中文版说明</a>]</p>
 
-        <p>This repository contains a SOAP client tool with the following key components:</p>
+        <p>此仓库包含一个 SOAP 客户端工具，具有以下主要组件：</p>
         <ul>
-            <li><code>cli_caller.py</code>: The main CLI interface for interacting with SOAP services.</li>
-            <li><code>soap_utility.py</code>: Core SOAP functionality using the <code>zeep</code> library.</li>
-            <li>WSDL files (<code>calculator.wsdl</code>, <code>test.wsdl</code>): Example WSDL files for testing.</li>
+            <li><code>cli_caller.py</code>: 用于与 SOAP 服务交互的主 CLI 接口。</li>
+            <li><code>soap_utility.py</code>: 使用 <code>zeep</code> 库实现的核心 SOAP 功能。</li>
+            <li>WSDL 文件 (<code>calculator.wsdl</code>, <code>test.wsdl</code>): 用于测试的示例 WSDL 文件。</li>
         </ul>
 
-        <h2>Key Commands</h2>
-        <p>Run the CLI tool with the following syntax:</p>
+        <h2>主要命令</h2>
+        <p>使用以下语法运行 CLI 工具：</p>
         <pre><code>python cli_caller.py &lt;WSDL_SOURCE&gt; &lt;COMMAND&gt; [ARGS]</code></pre>
 
-        <h3>Example Commands:</h3>
+        <h3>示例命令：</h3>
         <ul>
-            <li><strong>List methods</strong> in a WSDL file:
+            <li><strong>列出 WSDL 文件中的方法</strong>:
                 <pre><code>python cli_caller.py test.wsdl list</code></pre>
             </li>
-            <li><strong>Inspect a specific method</strong> to see its signature:
+            <li><strong>检查特定方法</strong>以查看其签名:
                 <pre><code>python cli_caller.py test.wsdl inspect &lt;METHOD_NAME&gt;</code></pre>
             </li>
-            <li><strong>Call a method</strong> with arguments:
+            <li><strong>调用方法</strong>并传递参数:
                 <pre><code>python cli_caller.py test.wsdl call &lt;METHOD_NAME&gt; [ARGS]</code></pre>
             </li>
         </ul>
 
-        <h3>Debug Mode:</h3>
-        <p>Add the <code>-d</code> flag for detailed logging:</p>
+        <h3>调试模式：</h3>
+        <p>添加 <code>-d</code> 标志以获取详细日志：</p>
         <pre><code>python cli_caller.py test.wsdl list -d</code></pre>
 
-        <h2>Architecture</h2>
+        <h2>架构</h2>
         <ul>
-            <li>The CLI (<code>cli_caller.py</code>) handles user input and delegates to <code>soap_utility.py</code>.</li>
-            <li><code>soap_utility.py</code> uses the <code>zeep</code> library for SOAP operations and direct XML parsing for method signatures.</li>
-            <li>Supports both file-based and URL-based WSDL sources.</li>
-            <li>Implements smart parameter type conversion (string to int/float/file content).</li>
-        </ul>
+            <li>CLI (<code>cli_caller.py</code>) 处理用户输入并委托给 <code>soap_utility.py</code>。</li>
+            <li><code>soap_utility.py</code> 使用 <code>zeep</code> 库进行 SOAP 操作，并直接解析 XML 以获取方法签名。</li>
+            <li>支持基于文件和基于 URL 的 WSDL 源。</li>
+            <li>实现智能参数类型转换（字符串到整数/浮点数/文件内容）。</li>
     </div>
 </body>
 </html>
