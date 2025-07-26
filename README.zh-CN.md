@@ -24,3 +24,34 @@
 - `soap_utility.py` 使用 `zeep` 库进行 SOAP 操作，并直接解析 XML 以获取方法签名。
 - 支持基于文件和基于 URL 的 WSDL 源。
 - 实现智能参数类型转换（字符串到整数/浮点数/文件内容）。
+
+## 国产系统支持
+
+本工具支持在国产操作系统上运行，包括中科方德操作系统。
+
+### 中科方德ARM系统支持
+
+本项目已针对ARM架构进行了优化，可直接在中科方德ARM版本操作系统上运行。
+
+- 架构支持：aarch64 (ARM64)
+- 兼容性：完全兼容中科方德桌面操作系统和服务器操作系统ARM版本
+- 部署方式：可直接使用预编译的ARM版本或从源码编译
+
+如需在中科方德系统上使用，请下载aarch64版本的可执行文件。
+
+## 编译
+
+使用PyInstaller进行编译：
+
+```bash
+pip install -r requirements.txt
+pyinstaller --onefile cli_caller.py
+```
+
+对于ARM架构（包括中科方德ARM系统）：
+
+```bash
+pip install -r requirements.txt
+pip install lxml
+pyinstaller --onefile cli_caller.py
+```

@@ -1,0 +1,7 @@
+feat: 增强对中科方德ARM系统的支持
+
+- 更新release-builder.yml工作流，添加针对中科方德ARM系统的测试任务
+- 在README.zh-CN.md中添加对中科方德ARM系统的支持说明
+- 添加.gitignore文件以忽略不必要的文件
+- 优化构建流程，确保在ARM架构上的兼容性
+- 添加详细的兼容性报告生成机制
