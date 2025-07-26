@@ -29,6 +29,25 @@
 
 本工具支持在国产操作系统上运行，包括中科方德操作系统。
 
+## CI/CD 和自动化
+
+本项目使用 GitHub Actions 进行自动化构建、测试和部署：
+
+- **📦 自动发布**: 基于版本标签触发的多平台二进制构建
+- **🌐 文档部署**: 自动化 GitHub Pages 部署
+- **🔧 ARM 架构支持**: 针对 ARM64 和中科方德系统的优化构建
+
+### 自动化快速开始
+```bash
+# 创建并推送发布标签以触发自动构建
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+### 相关文档
+- [📚 GitHub Actions 工作流教程](docs/github-actions-tutorial.md) - 完整工作流指南
+- [⚡ 快速指南](docs/github-actions-quick-guide.md) - 基本命令和故障排查
+
 ### 中科方德ARM系统支持
 
 本项目已针对ARM架构进行了优化，可直接在中科方德ARM版本操作系统上运行。
