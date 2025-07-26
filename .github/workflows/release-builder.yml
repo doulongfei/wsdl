@@ -15,15 +15,17 @@ jobs:
   create_release:
     name: Create Release
     runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
 
@@ -41,13 +43,13 @@ jobs:
             platform: linux/arm64
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Install dependencies for ${{ matrix.arch }}
         run: |
@@ -67,14 +69,12 @@ jobs:
 
       - name: Upload Release Asset for ${{ matrix.arch }}
         id: upload-release-asset
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/wsdl-cli-${{ matrix.arch }}
-          asset_name: wsdl-cli-linux-${{ matrix.arch }}
-          asset_content_type: application/octet-stream
+          tag_name: ${{ github.ref_name }}
+          files: ./dist/wsdl-cli-${{ matrix.arch }}
 
   build_fedora_arm:
     name: Build for Fedora ARM
@@ -82,13 +82,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Install dependencies for ARM
         run: |
@@ -115,27 +115,25 @@ jobs:
 
       - name: Upload Release Asset for Fedora ARM
         id: upload-fedora-arm-asset
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./wsdl-cli-fedora-arm.tar.gz
-          asset_name: wsdl-cli-fedora-arm.tar.gz
-          asset_content_type: application/gzip
+          tag_name: ${{ github.ref_name }}
+          files: ./wsdl-cli-fedora-arm.tar.gz
 
   test_on_arm:
     name: Test on ARM Environment
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Run tests in ARM environment
         run: |
@@ -166,7 +164,7 @@ jobs:
           echo "本工具已针对ARM架构进行优化，可直接在中科方德ARM版本操作系统上运行。" >> compatibility-report.md
 
       - name: Upload compatibility report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: compatibility-report
           path: compatibility-report.md
@@ -206,7 +204,7 @@ jobs:
           echo "备注: 本项目已针对ARM架构进行优化，可运行于中科方德等国产ARM操作系统" >> zhongke_fangde_compatibility_report.txt
 
       - name: Upload compatibility report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: zhongke-fangde-compatibility-report
           path: zhongke_fangde_compatibility_report.txt
